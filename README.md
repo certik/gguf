@@ -1,1 +1,3 @@
-# gguf
+# GGUF
+
+Utilities for the GGUF format.
