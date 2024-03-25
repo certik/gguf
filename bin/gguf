@@ -4,7 +4,7 @@ import sys
 
 import numpy as np
 
-from gguf.gguf_reader import GGUFReader
+from gguf.gguf_reader import GGUFReader, GGUFValueType
 
 
 def main():
@@ -15,11 +15,17 @@ def main():
     print(f"* Dumping {len(g.fields)} key/value pair(s)")
     for n, fname in enumerate(g.fields):
         f = g.fields[fname]
-        type_txt = str(f.types[0])[14:]
+        type_txt = f.types[-1].name
         if fname == "GGUF.tensor_count":
             fname = "GGUF.array_count"
-        value = f.parts[0][0]
-        print(f"{n+1:7}: {type_txt:10} |        1 | {fname} = {value}")
+        value = ""
+        if len(f.types) == 1:
+            curr_type = f.types[0]
+            if curr_type == GGUFValueType.STRING:
+                value = ' = {0}'.format(repr(str(bytes(f.parts[-1]), encoding='utf8')[:60]))
+            elif f.types[0] in g.gguf_scalar_to_np:
+                value = ' = {0}'.format(f.parts[-1][0])
+        print(f"{n+1:7}: {type_txt:10} | {len(f.data):8} | {fname}{value}")
     print()
     print(f"* Dumping {len(g.tensors)} array(s)")
     for n, a in enumerate(g.tensors):
